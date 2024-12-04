@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooth Brush Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin: 20px;
+        }
+
+        .timer {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+
+        .controls button {
+            font-size: 18px;
+            margin: 10px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .controls button:disabled {
+            background-color: #cccccc;
+        }
+
+        .brush-area {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #3d3d3d;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .streak {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .celebration {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .celebration-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .arrow {
+            font-size: 36px;
+            margin: 10px 0;
+        }
+
+        .reading-container {
+            margin: 20px 0;
+        }
+
+        .reading-section {
+            font-size: 16px;
+            padding: 15px;
+            background-color: #3d3d3d;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            max-height: 100px;
+            overflow-y: auto;
+            line-height: 1.4;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .reading-section.hidden {
+            max-height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .toggle-reading {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-reading:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tooth Brush Timer</h1>
+        <div class="streak">Current Streak: <span id="streakCount">0</span> days</div>
+        <div class="timer" id="timer">2:00</div>
+        <div class="brush-area" id="brushArea">
+            Ready to brush!
+            <div class="arrow" id="arrow">↑</div>
+        </div>
+        <div class="reading-container">
+            <button class="toggle-reading" id="toggleReading">Hide Reading</button>
+            <div class="reading-section" id="readingSection">
+                Loading content...
+            </div>
+        </div>
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="pauseBtn" disabled>Pause</button>
+            <button id="resetBtn" disabled>Reset</button>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration">
+        <div class="celebration-content">
+            <h2>Great job! 🎉</h2>
+            <p>You've completed your 2-minute brush!</p>
+            <button onclick="closeCelebration()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const brushingAreas = [
+            { area: "Top Left Teeth", arrow: "↖" },
+            { area: "Top Front Teeth", arrow: "↑" },
+            { area: "Top Right Teeth", arrow: "↗" },
+            { area: "Bottom Left Teeth", arrow: "↙" },
+            { area: "Bottom Front Teeth", arrow: "↓" },
+            { area: "Bottom Right Teeth", arrow: "↘" }
+        ];
+
+        let timeLeft = 120; // 2 minutes in seconds
+        let timer = null;
+        let currentArea = 0;
+        let isPaused = false;
+        let allWords = [];
+        let currentWordIndex = 0;
+        const wordsPerChunk = 30;
+
+        const timerDisplay = document.getElementById('timer');
+        const brushArea = document.getElementById('brushArea');
+        const arrow = document.getElementById('arrow');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const streakCount = document.getElementById('streakCount');
+        const readingSection = document.getElementById('readingSection');
+        const toggleReadingBtn = document.getElementById('toggleReading');
+
+        // Load streak from cookies
+        let streak = parseInt(getCookie('brushingStreak')) || 0;
+        let lastBrushDate = getCookie('lastBrushDate');
+        updateStreakDisplay();
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateBrushingArea() {
+            currentArea = Math.floor((120 - timeLeft) / 20) % brushingAreas.length;
+            const currentBrushArea = brushingAreas[currentArea];
+            brushArea.innerHTML = `
+                <div>${currentBrushArea.area}</div>
+                <div class="arrow">${currentBrushArea.arrow}</div>
+                <div style="font-size: 16px; margin-top: 5px;">
+                    ${Math.ceil(timeLeft/20)} sections remaining
+                </div>
+            `;
+
+            if (allWords.length > 0) {
+                currentWordIndex = (currentArea * wordsPerChunk) % Math.max(allWords.length - wordsPerChunk, 1);
+                updateReadingSection(currentWordIndex);
+            }
+        }
+
+        function startTimer() {
+            if (!timer) {
+                updateBrushingArea();
+                
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateTimer();
+                    
+                    if (timeLeft % 20 === 0) {
+                        updateBrushingArea();
+                    }
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        completeBrushing();
+                    }
+                }, 1000);
+
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                resetBtn.disabled = false;
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timer);
+            timer = null;
+            isPaused = true;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timer = null;
+            timeLeft = 120;
+            currentArea = 0;
+            currentWordIndex = 0;
+            if (allWords.length > 0) {
+                updateReadingSection(0);
+            }
+            updateTimer();
+            updateBrushingArea();
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = true;
+        }
+
+        function completeBrushing() {
+            document.getElementById('celebration').style.display = 'block';
+            updateStreak();
+        }
+
+        function closeCelebration() {
+            document.getElementById('celebration').style.display = 'none';
+            resetTimer();
+        }
+
+        function updateStreak() {
+            const today = new Date().toDateString();
+            if (lastBrushDate !== today) {
+                streak++;
+                setCookie('brushingStreak', streak, 365);
+                setCookie('lastBrushDate', today, 365);
+                updateStreakDisplay();
+            }
+        }
+
+        function updateStreakDisplay() {
+            streakCount.textContent = streak;
+        }
+
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        async function loadBookContent() {
+            try {
+                const response = await fetch('book.txt');
+                const text = await response.text();
+                allWords = text.split(/\s+/).filter(word => word.length > 0);
+                if (allWords.length > 0) {
+                    updateReadingSection(0);
+                }
+            } catch (error) {
+                console.error('Error loading book:', error);
+                readingSection.textContent = 'Error loading content';
+            }
+        }
+
+        function updateReadingSection(startIndex) {
+            const chunk = allWords.slice(startIndex, startIndex + wordsPerChunk).join(' ');
+            readingSection.textContent = chunk || 'End of content';
+        }
+
+        loadBookContent();
+
+        toggleReadingBtn.addEventListener('click', () => {
+            const readingSection = document.getElementById('readingSection');
+            readingSection.classList.toggle('hidden');
+            toggleReadingBtn.textContent = readingSection.classList.contains('hidden') ? 
+                'Show Reading' : 'Hide Reading';
+        });
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+    </script>
+</body>
+</html> 
