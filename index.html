@@ -121,6 +121,16 @@
         .toggle-reading:hover {
             background-color: #45a049;
         }
+
+        .reading-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .reading-controls button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -136,6 +146,10 @@
             <button class="toggle-reading" id="toggleReading">Hide Reading</button>
             <div class="reading-section" id="readingSection">
                 Loading content...
+            </div>
+            <div class="reading-controls">
+                <button class="toggle-reading" id="resetReadingBtn">Reset Reading Progress</button>
+                <button class="toggle-reading" id="nextSectionBtn">Next Section ➡️</button>
             </div>
         </div>
         <div class="controls">
@@ -170,6 +184,8 @@
         let allWords = [];
         let currentWordIndex = 0;
         const wordsPerChunk = 30;
+        let lastReadPosition = parseInt(getCookie('lastReadPosition')) || 0;
+        currentWordIndex = lastReadPosition; // Initialize with saved position
 
         const timerDisplay = document.getElementById('timer');
         const brushArea = document.getElementById('brushArea');
@@ -180,6 +196,7 @@
         const streakCount = document.getElementById('streakCount');
         const readingSection = document.getElementById('readingSection');
         const toggleReadingBtn = document.getElementById('toggleReading');
+        const nextSectionBtn = document.getElementById('nextSectionBtn');
 
         // Load streak from cookies
         let streak = parseInt(getCookie('brushingStreak')) || 0;
@@ -204,7 +221,6 @@
             `;
 
             if (allWords.length > 0) {
-                currentWordIndex = (currentArea * wordsPerChunk) % Math.max(allWords.length - wordsPerChunk, 1);
                 updateReadingSection(currentWordIndex);
             }
         }
@@ -218,6 +234,7 @@
                     updateTimer();
                     
                     if (timeLeft % 20 === 0) {
+                        nextSection();
                         updateBrushingArea();
                     }
 
@@ -246,10 +263,6 @@
             timer = null;
             timeLeft = 120;
             currentArea = 0;
-            currentWordIndex = 0;
-            if (allWords.length > 0) {
-                updateReadingSection(0);
-            }
             updateTimer();
             updateBrushingArea();
             startBtn.disabled = false;
@@ -304,7 +317,8 @@
                 const text = await response.text();
                 allWords = text.split(/\s+/).filter(word => word.length > 0);
                 if (allWords.length > 0) {
-                    updateReadingSection(0);
+                    currentWordIndex = Math.min(lastReadPosition, Math.max(allWords.length - wordsPerChunk, 0));
+                    updateReadingSection(currentWordIndex);
                 }
             } catch (error) {
                 console.error('Error loading book:', error);
@@ -315,6 +329,24 @@
         function updateReadingSection(startIndex) {
             const chunk = allWords.slice(startIndex, startIndex + wordsPerChunk).join(' ');
             readingSection.textContent = chunk || 'End of content';
+            setCookie('lastReadPosition', startIndex, 365);
+            lastReadPosition = startIndex;
+        }
+
+        function resetReadingProgress() {
+            currentWordIndex = 0;
+            lastReadPosition = 0;
+            setCookie('lastReadPosition', 0, 365);
+            updateReadingSection(0);
+        }
+
+        function nextSection() {
+            if (allWords.length > 0) {
+                const nextIndex = (currentWordIndex + wordsPerChunk) % allWords.length;
+                currentWordIndex = nextIndex;
+                lastReadPosition = nextIndex;
+                updateReadingSection(nextIndex);
+            }
         }
 
         loadBookContent();
@@ -329,6 +361,8 @@
         startBtn.addEventListener('click', startTimer);
         pauseBtn.addEventListener('click', pauseTimer);
         resetBtn.addEventListener('click', resetTimer);
+        document.getElementById('resetReadingBtn').addEventListener('click', resetReadingProgress);
+        nextSectionBtn.addEventListener('click', nextSection);
     </script>
 </body>
 </html> 
