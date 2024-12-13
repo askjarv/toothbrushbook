@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tooth Brush Timer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏲️</text></svg>">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,10 +21,10 @@
         .container {
             text-align: center;
             padding: 20px;
-            background-color: #2d2d2d;
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             margin: 20px;
+            transition: all 0.3s ease;
         }
 
         .timer {
@@ -49,10 +50,9 @@
         .brush-area {
             font-size: 24px;
             margin: 20px 0;
-            padding: 15px;
-            background-color: #3d3d3d;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
         }
 
         .streak {
@@ -81,8 +81,10 @@
         }
 
         .arrow {
-            font-size: 36px;
-            margin: 10px 0;
+            font-size: 48px;
+            margin: 15px 0;
+            transition: color 0.5s ease;
+            text-shadow: 0 0 10px currentColor;
         }
 
         .reading-container {
@@ -91,14 +93,12 @@
 
         .reading-section {
             font-size: 16px;
-            padding: 15px;
-            background-color: #3d3d3d;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
             max-height: 100px;
             overflow-y: auto;
             line-height: 1.4;
-            transition: max-height 0.3s ease-out;
         }
 
         .reading-section.hidden {
@@ -131,20 +131,185 @@
         .reading-controls button {
             flex: 1;
         }
+
+        .settings-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+        }
+
+        .settings-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 500px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .settings-group label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-upload-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        .light-mode {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        .light-mode .container {
+            background-color: #f0f0f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .brush-area,
+        .light-mode .reading-section {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        .light-mode .settings-content {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        .light-mode .file-name {
+            color: #666666;
+        }
+
+        .glass-effect {
+            background: rgba(45, 45, 45, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light-mode .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .arrow-color-1 { color: #FF6B6B; }
+        .arrow-color-2 { color: #4ECDC4; }
+        .arrow-color-3 { color: #45B7D1; }
+        .arrow-color-4 { color: #96CEB4; }
+        .arrow-color-5 { color: #FFEEAD; }
+        .arrow-color-6 { color: #D4A5A5; }
+
+        body::before {
+            content: "🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-size: 32px;
+            line-height: 1.6;
+            white-space: pre;
+            text-align: center;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s linear infinite;
+        }
+
+        body::after {
+            content: "🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷\A 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷 🦷";
+            position: fixed;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            font-size: 32px;
+            line-height: 1.6;
+            white-space: pre;
+            text-align: center;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s linear infinite reverse;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        .light-mode::before,
+        .light-mode::after {
+            opacity: 0.08;
+            filter: brightness(0.7);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <button class="settings-button" id="settingsBtn">⚙️ Settings</button>
+    
+    <div class="container glass-effect">
         <h1>Tooth Brush Timer</h1>
         <div class="streak">Current Streak: <span id="streakCount">0</span> days</div>
         <div class="timer" id="timer">2:00</div>
-        <div class="brush-area" id="brushArea">
+        <div class="brush-area glass-effect" id="brushArea">
             Ready to brush!
             <div class="arrow" id="arrow">↑</div>
         </div>
         <div class="reading-container">
             <button class="toggle-reading" id="toggleReading">Hide Reading</button>
-            <div class="reading-section" id="readingSection">
+            <div class="reading-section glass-effect" id="readingSection">
                 Loading content...
             </div>
             <div class="reading-controls">
@@ -166,6 +331,41 @@
             <button onclick="closeCelebration()">Close</button>
         </div>
     </div>
+
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content glass-effect">
+            <h2>Settings</h2>
+            <div class="settings-group">
+                <label>Content Type:</label>
+                <input type="radio" name="contentType" value="text" id="textRadio" checked> Text
+                <input type="radio" name="contentType" value="audio" id="audioRadio"> Audio
+            </div>
+            
+            <div class="settings-group" id="textUploadGroup">
+                <label>Upload Text File:</label>
+                <input type="file" id="textFile" class="file-input" accept=".txt">
+                <button class="file-upload-btn" onclick="document.getElementById('textFile').click()">Choose Text File</button>
+                <div class="file-name" id="textFileName"></div>
+            </div>
+            
+            <div class="settings-group" id="audioUploadGroup" style="display: none;">
+                <label>Upload Audio File:</label>
+                <input type="file" id="audioFile" class="file-input" accept=".mp3">
+                <button class="file-upload-btn" onclick="document.getElementById('audioFile').click()">Choose Audio File</button>
+                <div class="file-name" id="audioFileName"></div>
+            </div>
+            
+            <div class="settings-group">
+                <label>Theme:</label>
+                <input type="radio" name="theme" value="dark" id="darkTheme" checked> Dark
+                <input type="radio" name="theme" value="light" id="lightTheme"> Light
+            </div>
+            
+            <button class="file-upload-btn" onclick="closeSettings()">Close</button>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
 
     <script>
         const brushingAreas = [
@@ -203,6 +403,12 @@
         let lastBrushDate = getCookie('lastBrushDate');
         updateStreakDisplay();
 
+        // Add to the existing variables at the top of the script
+        let contentPreference = getCookie('contentPreference') || 'text';
+        let themePreference = getCookie('themePreference') || 'dark';
+        const darkTheme = document.getElementById('darkTheme');
+        const lightTheme = document.getElementById('lightTheme');
+
         function updateTimer() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
@@ -212,9 +418,11 @@
         function updateBrushingArea() {
             currentArea = Math.floor((120 - timeLeft) / 20) % brushingAreas.length;
             const currentBrushArea = brushingAreas[currentArea];
+            const colorClass = `arrow-color-${currentArea + 1}`;
+            
             brushArea.innerHTML = `
                 <div>${currentBrushArea.area}</div>
-                <div class="arrow">${currentBrushArea.arrow}</div>
+                <div class="arrow ${colorClass}">${currentBrushArea.arrow}</div>
                 <div style="font-size: 16px; margin-top: 5px;">
                     ${Math.ceil(timeLeft/20)} sections remaining
                 </div>
@@ -227,19 +435,42 @@
 
         function startTimer() {
             if (!timer) {
+                if (audioRadio.checked && !audioPlayer.src) {
+                    alert('Please select an audio file in settings first!');
+                    settingsModal.style.display = 'block';
+                    return;
+                }
+
                 updateBrushingArea();
+                
+                if (audioRadio.checked && audioPlayer.src) {
+                    // Load saved progress when starting
+                    const savedProgress = getCookie(`audioProgress_${currentAudioFile}`);
+                    if (savedProgress) {
+                        audioProgress = parseFloat(savedProgress);
+                        audioPlayer.currentTime = audioProgress;
+                    }
+                    audioPlayer.play();
+                }
                 
                 timer = setInterval(() => {
                     timeLeft--;
                     updateTimer();
                     
                     if (timeLeft % 20 === 0) {
-                        nextSection();
+                        if (textRadio.checked) {
+                            nextSection();
+                        }
                         updateBrushingArea();
                     }
 
                     if (timeLeft <= 0) {
                         clearInterval(timer);
+                        if (audioPlayer.src) {
+                            audioPlayer.pause();
+                            audioProgress = audioPlayer.currentTime;
+                            setCookie(`audioProgress_${currentAudioFile}`, audioProgress, 365);
+                        }
                         completeBrushing();
                     }
                 }, 1000);
@@ -254,6 +485,11 @@
             clearInterval(timer);
             timer = null;
             isPaused = true;
+            if (audioPlayer.src) {
+                audioPlayer.pause();
+                audioProgress = audioPlayer.currentTime;
+                setCookie(`audioProgress_${currentAudioFile}`, audioProgress, 365);
+            }
             startBtn.disabled = false;
             pauseBtn.disabled = true;
         }
@@ -263,6 +499,9 @@
             timer = null;
             timeLeft = 120;
             currentArea = 0;
+            if (audioPlayer.src) {
+                audioPlayer.pause();
+            }
             updateTimer();
             updateBrushingArea();
             startBtn.disabled = false;
@@ -363,6 +602,114 @@
         resetBtn.addEventListener('click', resetTimer);
         document.getElementById('resetReadingBtn').addEventListener('click', resetReadingProgress);
         nextSectionBtn.addEventListener('click', nextSection);
+
+        let currentAudioFile = null;
+        let audioProgress = 0;
+
+        // Add these new elements
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const textRadio = document.getElementById('textRadio');
+        const audioRadio = document.getElementById('audioRadio');
+        const textUploadGroup = document.getElementById('textUploadGroup');
+        const audioUploadGroup = document.getElementById('audioUploadGroup');
+        const textFile = document.getElementById('textFile');
+        const audioFile = document.getElementById('audioFile');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        // Settings modal controls
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'block';
+        });
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        // Content type radio button handlers
+        textRadio.addEventListener('change', () => {
+            textUploadGroup.style.display = 'block';
+            audioUploadGroup.style.display = 'none';
+            setCookie('contentPreference', 'text', 365);
+            updateContentVisibility();
+        });
+
+        audioRadio.addEventListener('change', () => {
+            textUploadGroup.style.display = 'none';
+            audioUploadGroup.style.display = 'block';
+            setCookie('contentPreference', 'audio', 365);
+            updateContentVisibility();
+        });
+
+        // File upload handlers
+        textFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('textFileName').textContent = file.name;
+                const text = await file.text();
+                allWords = text.split(/\s+/).filter(word => word.length > 0);
+                resetReadingProgress();
+            }
+        });
+
+        audioFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('audioFileName').textContent = file.name;
+                const audioUrl = URL.createObjectURL(file);
+                audioPlayer.src = audioUrl;
+                currentAudioFile = file.name;
+                
+                // Load saved progress for this audio file
+                const savedProgress = getCookie(`audioProgress_${file.name}`);
+                if (savedProgress) {
+                    audioProgress = parseFloat(savedProgress);
+                    audioPlayer.currentTime = audioProgress;
+                } else {
+                    audioProgress = 0;
+                    audioPlayer.currentTime = 0;
+                }
+            }
+        });
+
+        // Modify the reading container visibility function
+        function updateContentVisibility() {
+            const readingContainer = document.querySelector('.reading-container');
+            if (textRadio.checked) {
+                readingContainer.style.display = 'block';
+            } else {
+                readingContainer.style.display = 'none';
+            }
+        }
+
+        // Add this to initialize content type based on saved preference
+        document.addEventListener('DOMContentLoaded', () => {
+            if (contentPreference === 'audio') {
+                audioRadio.checked = true;
+                textRadio.checked = false;
+                textUploadGroup.style.display = 'none';
+                audioUploadGroup.style.display = 'block';
+            }
+            updateContentVisibility();
+
+            // Initialize theme
+            if (themePreference === 'light') {
+                lightTheme.checked = true;
+                darkTheme.checked = false;
+                document.body.classList.add('light-mode');
+            }
+        });
+
+        // Add these event listeners with the other radio button handlers
+        darkTheme.addEventListener('change', () => {
+            document.body.classList.remove('light-mode');
+            setCookie('themePreference', 'dark', 365);
+        });
+
+        lightTheme.addEventListener('change', () => {
+            document.body.classList.add('light-mode');
+            setCookie('themePreference', 'light', 365);
+        });
     </script>
 </body>
 </html> 
